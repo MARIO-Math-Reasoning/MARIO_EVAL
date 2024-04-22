@@ -15299,8 +15299,8 @@
     {
         "index": 2550,
         "question": "Find all solutions to the equation \\[\\frac{\\left(\\frac{x}{x+1}\\right)^2 + 11}{\\left(\\frac{x}{x+1}\\right)^2 + 1} = 2.\\]Enter all the solutions, separated by commas.",
-        "answer": "-\\tfrac34",
-        "human_type": "Real"
+        "answer": "-\\tfrac32, -\\tfrac34",
+        "human_type": "Set"
     },
     {
         "index": 2551,
@@ -15941,8 +15941,8 @@
     {
         "index": 2657,
         "question": "Find all values of $b$ for which the equations $1988x^2 + bx + 8891 = 0$ and $8891x^2 + bx + 1988 = 0$ have a common root.\n\nEnter all the possible values of $b,$ separated by commas.",
-        "answer": "10879",
-        "human_type": "Real"
+        "answer": "-10879,10879",
+        "human_type": "Set"
     },
     {
         "index": 2658,
@@ -27368,8 +27368,8 @@
     {
         "index": 4560,
         "question": "When $\\begin{pmatrix} a \\\\ b \\end{pmatrix}$ is projected onto $\\begin{pmatrix} \\sqrt{3} \\\\ 1 \\end{pmatrix},$ the resulting vector has magnitude $\\sqrt{3}.$  Also, $a = 2 + b \\sqrt{3}.$  Enter all possible values of $a,$ separated by commas.",
-        "answer": "2",
-        "human_type": "Real"
+        "answer": "-1,2",
+        "human_type": "Set"
     },
     {
         "index": 4561,
@@ -27386,8 +27386,8 @@
     {
         "index": 4563,
         "question": "Find the angles of the triangle whose sides are $3 + \\sqrt{3},$ $2 \\sqrt{3},$ and $\\sqrt{6}.$  Enter the angles of the triangle, measured in degrees, separated by commas.",
-        "answer": "105^\\circ",
-        "human_type": "Real"
+        "answer": "30^\\circ,45^\\circ,105^\\circ",
+        "human_type": "Set"
     },
     {
         "index": 4564,
@@ -29558,7 +29558,7 @@
     {
         "index": 4925,
         "question": "For a constant $c,$ in cylindrical coordinates $(r,\\theta,z),$ find the shape described by the equation\n\\[z = c.\\](A) Line\n(B) Circle\n(C) Plane\n(D) Sphere\n(E) Cylinder\n(F) Cone\n\nEnter the letter of the correct option.",
-        "answer": "(C) Plane\n",
+        "answer": "\\text{(C)}",
         "human_type": "Others"
     },
     {
