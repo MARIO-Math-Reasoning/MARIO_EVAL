@@ -1,4 +1,4 @@
-# MATH EVALUATION
+# MARIO EVAL: A mathematical dataset evaluation toolkit
 
 ## We fix some bugs in the original latex2sympy, and more antlr parser syntax to support more latex expressions.
 

@@ -4,7 +4,7 @@ import sympy
 
 from typing import Optional
 #from pylatexenc import latex2text
-from latex2sympy2 import latex2sympy
+from latex2sympy.latex2sympy2 import latex2sympy
 
 from .constants import *
 
