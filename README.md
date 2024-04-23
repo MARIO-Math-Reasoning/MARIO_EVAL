@@ -1,6 +1,10 @@
 # MARIO EVAL: A mathematical dataset evaluation toolkit
 
-## We fix some bugs in the original latex2sympy, and more antlr parser syntax to support more latex expressions.
+This is the official repository for the paper [MARIO Eval](https://arxiv.org/abs/2404.13925). We fix some bugs in the original latex2sympy, and more antlr parser syntax to support more latex expressions.
+
+## Features
+- [x] sympy based equivalence of two math expressions
+- [ ] integration of LLM (Coming soon)
 
 ## Requirements
 1. `sympy=1.12`
@@ -30,3 +34,16 @@ True
 
 ## Unittest
 `python -m unittest math_evaluation/tests/test_is_equiv.py`
+
+## Citation
+Please cite our paper if you use data or code.
+```
+@misc{zhang2024mario,
+      title={MARIO Eval: Evaluate Your Math LLM with your Math LLM--A mathematical dataset evaluation toolkit}, 
+      author={Boning Zhang and Chengxi Li and Kai Fan},
+      year={2024},
+      eprint={2404.13925},
+      archivePrefix={arXiv},
+      primaryClass={cs.CL}
+}
+```
