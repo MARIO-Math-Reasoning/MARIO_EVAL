@@ -138,6 +138,8 @@ class TestIsEquiv(unittest.TestCase):
             ("10weeks", "10"), # space is optional for long unit
             ("10 weeks", "10"),
             ("10 cm^2", "10"), # space is must for short unit
+            ("20:34", "20:34:00"),
+            ("20:34", "08:34 \\text{P.M.}"),
         ]
         for test_in, test_out in test_pairs:
             self.assertTrue(_test_is_equiv(test_in, test_out, verbose=verbose))
@@ -202,6 +204,7 @@ class TestIsEquiv(unittest.TestCase):
 
         test_in = "\\begin{pmatrix} 1 & 1/2 \\\\ 1/3 & 4 \\end{pmatrix}"
         test_out = "\\begin{pmatrix} 1 & 0.5 \\\\ 1/3 & 4 \\end{pmatrix}"
+        # test_out="$\\\\begin{pmatrix} 6 \\\\\\\\ 3 \\\\\\\\ 0 \\\\end{pmatrix}$"
         self.assertTrue(_test_is_equiv(test_in, test_out, verbose=verbose))
 
         test_in = "\\begin{matrix} x \\\\ \\sqrt{3} + 2x  \\\\ \\frac12 \\end{matrix}"
@@ -214,6 +217,10 @@ class TestIsEquiv(unittest.TestCase):
 
         test_in = "\\begin{matrix} \\frac12 \\\\ 1 \\end{matrix}"
         test_out = "[0.5, 1]"
+        self.assertTrue(_test_is_equiv(test_in, test_out, verbose=verbose))
+
+        test_in = "\\begin{cases} a+b=\\frac12 \\\\ a-b=\\sqrt3 \\end{cases}"
+        test_out = "\\begin{cases} a+b=0.5\\\\ a-b=1.732\\end{cases}"
         self.assertTrue(_test_is_equiv(test_in, test_out, verbose=verbose))
 
     def test_is_equiv_trigonometric(self):

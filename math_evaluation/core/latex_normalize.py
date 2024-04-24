@@ -123,6 +123,16 @@ def _str_to_list(x: str):
     return x
 
 
+def _str_matrix_normalize(expr: str):
+    if "{cases}" in expr:
+        expr = expr.replace("{cases}", "{matrix}")
+    if "{array}" in expr:
+        expr = expr.replace("{array}", "{matrix}")
+    if not (not "\\\\begin" in expr and "\\begin" in expr and "matrix" in expr):
+        expr = expr.replace("\\\\", "\\")
+    return expr
+
+
 def _str_to_interval(x: str):
     try:
         x = x.split('⋃') if '⋃' in x else x.split('\\cup')
@@ -190,6 +200,36 @@ def _strip_properly_formatted_commas(expr: str):
     return next_expr
 
 
+def _str_to_time_list(expr: str):
+    # case 1: am/pm is must, when only hour, 2 am, 2\\text{am}
+    regex = r"^(\d{1,2})\s*((?:\\text\{\s*[ap]\.?m\.?\s*\})|(?:[ap]\.?m\.?))$"
+    match = re.search(regex, expr, re.IGNORECASE)
+    if match:
+        hour, meridiem = match.group(1, 2)
+        if "p.m." in meridiem.lower() or "pm" in meridiem.lower():
+            hour = str(int(hour) % 12 + 12)
+        return hour
+
+    # case 2: am/pm is optional, but : is must, e.g., 20:00, 8:00pm
+    regex = r"^(\d{1,2}):(\d{2})(?::(\d{2}))?\s*((?:\\text\{\s*[ap]\.?m\.?\s*\})|(?:[ap]\.?m\.?))?$"
+    match = re.search(regex, expr, re.IGNORECASE)
+    if match:
+        hour, minute, second, meridiem = match.group(1, 2, 3, 4)
+        # second and meridem could be None
+        if meridiem and ("p.m." in meridiem.lower() or "pm" in meridiem.lower()):
+            hour = str(int(hour) % 12 + 12)     # 2pm -> 14, 14pm -> 14
+        if second and int(second) != 0:
+            return f"[{int(hour)}, {int(minute)}, {int(second)}]"
+        else:
+            # only consider hour and minute
+            if int(minute) == 0:
+                return hour
+            else:
+                return f"[{int(hour)}, {int(minute)}]"
+
+    return expr
+
+
 def string_normalize(expr: str, is_ground_truth: bool = False):
     if expr is None:
         return None
@@ -198,21 +238,16 @@ def string_normalize(expr: str, is_ground_truth: bool = False):
     expr = expr.strip(" ")
 
     # latex matrix has \\\\ which cannot be replaced, e.g., \\begin{matrix} 1 & 2 \\\\ 3 & 4 \\end{matrix}
-    if "{cases}" in expr:
-        expr = expr.replace("{cases}", "{matrix}")
-    if "{array}" in expr:
-        expr = expr.replace("{array}", "{matrix}")
-    if not (not "\\\\begin" in expr and "\\begin" in expr and "matrix" in expr):
-        expr = expr.replace("\\\\", "\\")
+    expr = _str_matrix_normalize(expr)
 
     # Remove enclosing `\text{}`.
-    m = re.search(r"^\\\s*text{\s*(?P<text>.+?)}$", expr)
+    m = re.search(r"^\\\s*text{\s*(?P<text>.+?)}$", expr, re.DOTALL)
     if m:
         expr = m.group("text")
         return string_normalize(expr)
 
     # Extract yyy from {xxx | yyy }
-    m = re.search(r"^\\{(.*)\|(.*)\\}$", expr)
+    m = re.search(r"^\\{(.*)\|(.*)\\}$", expr, re.DOTALL)
     if m:
         expr = m.group(2) if m.group(2) else m.group(3)
         return string_normalize(expr)
@@ -281,6 +316,9 @@ def string_normalize(expr: str, is_ground_truth: bool = False):
     expr = re.sub(r"[a-zA-Z]+\s*\\in", "", expr)
 
     # units in \\text{xxx}
+    # Special case for time, transform to list, e.g., "08:30 \\text{pm}" -> "[8, 30]"
+    expr = _str_to_time_list(expr)
+
     # remove unit
     # we only deal with valid power,
     #   e.g., \\text{cm}^d, d must be single digit. 
@@ -383,22 +421,45 @@ def float_to_latex_scientific(expr: str) -> str:
     return expr
 
 
-def split_tuple(expr: str, expect_type: Optional[type] = None):
+def split_tuple(expr: str, expected_type: Optional[type] = None):
     """
     Split the elements in a tuple/interval, while handling well-formatted commas in large numbers
 
     Only consider first and last brackets are matched and no bracket between the first and last brackets
 
     "(x, y, z)" or "[x, y, z]" -> ["x", "y", "z"]
-    "x, y, z" -> {x, y, z}
+    "x, y, z" or "{x, y, z}" -> {"x", "y", "z"}
     "[(1, 2), (2,3)]" -> ["(1, 2)", "(2,3)"]
     """
     expr = _strip_properly_formatted_commas(expr)
 
-    return_list = False
-    if len(expr) > 2 and expr[0] + expr[-1] in {"[]", "()"}:
-        expr = expr[1:-1]
-        return_list = True
+    # check whether to remove parenthesis
+    # (1, 2), (3, 4) should not be tuple
+    cnt = 0
+    n = len(expr)
+    remove_parenthesis = True
+    for i, ch in enumerate(expr):
+        cnt += (ch == "[" or ch == "(" or ch == "{")
+        cnt -= (ch == "]" or ch == ")" or ch == "}")
+        if cnt == 0 and i < n - 1:
+            remove_parenthesis = False
+
+    assert cnt == 0, "parenthesis not match"
+
+    return_type = set
+    if remove_parenthesis and len(expr) > 2:
+        if expr[0] + expr[-1] == "[]":
+            expr = expr[1:-1]
+            return_type = list
+        elif expr[0] + expr[-1] == "()":
+            expr = expr[1:-1]
+            return_type = tuple
+        elif expr[0] + expr[-1] == "{}":
+            expr = expr[1:-1]
+            return_type = set
+    
+    if expected_type:
+        return_type = expected_type
     
     cnt = 0
     stack = []
@@ -409,17 +470,85 @@ def split_tuple(expr: str, expect_type: Optional[type] = None):
             stack = []
         else:
             stack.append(ch)
-            cnt += (ch == "[" or ch == "(")
-            cnt -= (ch == "]" or ch == ")")
+            cnt += (ch == "[" or ch == "(" or ch == "{")
+            cnt -= (ch == "]" or ch == ")" or ch == "}")
     
-    assert cnt == 0, "parenthesis not match"
     if stack:
         result.append("".join(stack).strip())
     
     if len(result) > 1:
-        return result if return_list else set(result)
+        return return_type(result)
     else:
         return expr
+
+
+def split_matrix(expr: str):
+    """
+    Since SymPy version 1.9.
+
+    non-Expr objects in a Matrix is deprecated. Matrix represents
+    a mathematical matrix. To represent a container of non-numeric
+    entities, Use a list of lists, TableForm, NumPy array, or some
+    other data structure instead.
+
+    See https://docs.sympy.org/latest/explanation/active-deprecations.html#deprecated-non-expr-in-matrix
+    for details.
+
+    This function will transform matrix string into list of string list. 
+    We consider row vector and column vector are equivalent.
+
+    e.g., 
+    row vector: "\\begin{matrix} a & b & c \\end{matrix}"           -> ["a", "b", "c"]
+    col vector: "\\begin{matrix} a \\\\ b \\\\ c \\end{matrix}"     -> ["a", "b", "c"]
+    matrix:     "\\begin{matrix} a & b \\\\ c & d \\end{matrix}"    -> [["a", "b"], ["c", "d"]]
+
+    row vector: "[a, b, c]"                                         -> ["a", "b", "c"]
+    col vector: "[[a], [b], [c]]"                                   -> ["a", "b", "c"]
+    matrix:     "[[a, b], [c, d]]"                                  -> [["a", "b"], ["c", "d"]]
+    """
+    def check_dim(elements):
+        is_matrix = True
+        n_col = None
+        for col in elements:
+            cur_n_col = 1 if isinstance(col, str) else len(col)
+            if n_col and cur_n_col != n_col:
+                is_matrix = False
+                break
+            n_col = cur_n_col
+            
+        if not is_matrix:
+            print("WARNING: mismatched dimensions. Won't parse.")
+        return is_matrix
+
+    regex = r"^\\begin\{[a-zA-Z]?matrix\}(.*?)\\end\{[a-zA-Z]?matrix\}$"
+    match = re.search(regex, expr, re.DOTALL)
+    elements = []
+    if match:
+        rows = match.group(1).split("\\\\")
+        for row in rows:
+            col = row.split("&")
+            if len(col) == 1:
+                elements.append(col[0])
+            else:
+                elements.append(col)
+
+    else:
+        is_matrix = True
+        rows = split_tuple(expr, list)
+        if isinstance(rows, str):
+            rows = [rows]
+        elements = []
+        for row in rows:
+            col = split_tuple(row, list)
+            elements.append(col)
+            
+    if elements:
+        if len(elements) == 1:
+            elements = elements[0]
+        if check_dim(elements):
+            expr = elements 
+
+    return expr
 
 
 ####################

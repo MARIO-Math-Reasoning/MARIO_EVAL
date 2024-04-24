@@ -1,8 +1,9 @@
-import re
+from typing import Optional
 
 from .latex_normalize import (
     string_normalize,
     split_tuple,
+    split_matrix,
     _is_frac, 
     _str_is_int,
     _str_is_mat,
@@ -35,8 +36,8 @@ def is_equiv(ground_truth: str, given: str, verbose: bool = False):
         else:
             return is_latex_equiv(ground_truth_normalized, given_normalized, verbose=verbose)
 
-    except Exception as e:  # 捕获任何异常，并将其绑定到变量 e
-        return False  # 发生异常时返回 False
+    except Exception as e:
+        return False 
 
 
 def is_normalized_string_equival(ground_truth: str, given: str, verbose: bool = False):
@@ -61,16 +62,21 @@ def is_latex_equiv(
     if len(given_normalized) == 0:
         return False
 
-    is_correct = are_equal_under_sympy(ground_truth_normalized, given_normalized, verbose)
-    if is_correct:
-        return True
-
     is_correct = False
     if '(' in ground_truth_normalized or ')' in ground_truth_normalized or '[' in ground_truth_normalized or ']' in ground_truth_normalized:
         is_correct = is_equiv_possible_intervals(ground_truth_normalized, given_normalized, verbose)
     
     if not is_correct:
-        is_correct = is_equiv_possible_tuple(ground_truth_normalized, given_normalized, verbose)
+        is_correct = is_equiv_possible_tuple(ground_truth_normalized, given_normalized, verbose, known_equiv=False)
+
+    if not is_correct:
+        is_correct = is_equiv_possible_matrix(ground_truth_normalized, given_normalized, verbose, known_equiv=False)
+
+    # expr startswith [ or (, endwiths ) or ] are evaluated in above cases
+    gt_done = len(ground_truth_normalized) >= 2 and ground_truth_normalized[0] + ground_truth_normalized[-1] in ["[]", "()", "{}"]
+    gv_done = len(given_normalized) >= 2 and given_normalized[0] + given_normalized[-1] in ["[]", "()", "{}"]
+    if not is_correct and (not gt_done or not gv_done):
+        is_correct = are_equal_under_sympy(ground_truth_normalized, given_normalized, verbose)
     
     return is_correct
 
@@ -91,21 +97,27 @@ def is_equiv_possible_tuple(
     ground_truth_normalized: str, 
     given_normalized: str, 
     verbose: bool = False,
+    known_equiv: Optional[bool] = None,
 ) -> bool:
     # split "(,,,)" or "[,,,]" into list, split ",,," into set
     ground_truth_elems = split_tuple(ground_truth_normalized)
-    gt_type = type(ground_truth_elems)
-    given_elems = split_tuple(given_normalized, expect_type=gt_type)
+    given_elems = split_tuple(given_normalized)
 
     if verbose:
         print(ground_truth_elems, given_elems)
+
+    if isinstance(ground_truth_elems, str) and isinstance(given_elems, str):
+        if known_equiv is None or ground_truth_elems != ground_truth_normalized or given_elems != given_normalized:
+            return is_equiv(ground_truth_elems, given_elems)
+        else:
+            return known_equiv
 
     is_correct = False
     if len(ground_truth_elems) != len(given_elems) and not '\\in' in given_elems:
         is_correct = False
     elif type(ground_truth_elems) != type(given_elems):
         is_correct = False
-    elif isinstance(ground_truth_elems, list):
+    elif isinstance(ground_truth_elems, (list, tuple)):
         for ground_truth_elem, given_elem in zip(ground_truth_elems, given_elems):
             if not is_equiv(ground_truth_elem, given_elem):
                 return False
@@ -123,3 +135,44 @@ def is_equiv_possible_tuple(
         return all(gt_found_matches)
 
     return is_correct
+
+
+def is_equiv_possible_matrix(
+    ground_truth_normalized: str, 
+    given_normalized: str, 
+    verbose: bool = False,
+    known_equiv: Optional[bool] = None,
+) -> bool:
+    gt_matrix = split_matrix(ground_truth_normalized)
+    gv_matrix = split_matrix(given_normalized)
+    
+    if isinstance(gt_matrix, str) and isinstance(gv_matrix, str):
+        if known_equiv is None or gt_matrix != ground_truth_normalized or gv_matrix != given_normalized:
+            return is_equiv(gt_matrix, gv_matrix)
+        else:
+            return known_equiv
+
+    elif isinstance(gt_matrix, list) and isinstance(gv_matrix, list):
+        # check num of rows are equal
+        if len(gt_matrix) != len(gv_matrix):
+            return False
+
+        for gt_col, gv_col in zip(gt_matrix, gv_matrix):
+            if isinstance(gt_col, str) and isinstance(gv_col, str) and is_equiv(gt_col, gv_col):
+                continue
+
+            elif isinstance(gt_col, list) and isinstance(gv_col, list):
+                # check num of cols are equal
+                if len(gt_col) != len(gv_col):
+                    return False
+
+                for gt_col_item, gv_col_item in zip(gt_col, gv_col):
+                    if not is_equiv(gt_col_item, gv_col_item):
+                        return False
+            else:
+                return False
+
+        return True
+                
+    else:
+        return False
