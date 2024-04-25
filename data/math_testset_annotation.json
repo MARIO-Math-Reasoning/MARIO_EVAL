@@ -27915,7 +27915,7 @@
         "index": 4651,
         "question": "Find all possible values of the determinant of\n\\[\\begin{pmatrix} \\sec^2 x & 1 & 1 \\\\ \\cos^2 x & \\cos^2 x & \\csc^2 x \\\\ 1 & \\cos^2 x & \\cot^2 x \\end{pmatrix},\\]as $x$ ranges over all real numbers (where the determinant is defined).",
         "answer": "(0,1)",
-        "human_type": "Set"
+        "human_type": "Interval"
     },
     {
         "index": 4652,
