@@ -28,5 +28,5 @@ setuptools.setup(
     packages=setuptools.find_packages(exclude=("math_evaluation", "math_evaluation.*")),
     install_requires=get_requirements(),
     py_modules = ["math_evaluation"],
-    version='0.2.4',
+    version='0.2.5',
 )

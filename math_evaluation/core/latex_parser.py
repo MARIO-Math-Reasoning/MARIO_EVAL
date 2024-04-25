@@ -60,8 +60,14 @@ def _sympy_parse(expr: str) -> Tuple[Any, Any]:
             ),
             # backend='lark'
         )
-        if isinstance(sp_or_py_expr, tuple):
+        if isinstance(sp_or_py_expr, tuple) and len(sp_or_py_expr) > 2:
+            # cannot be interval
             sp_or_py_expr = list(sp_or_py_expr)
+        # remove duplicated
+        if l2s_expr and sp_or_py_expr == l2s_expr:
+            sp_or_py_expr = None
+        if sp_expr and sp_or_py_expr == sp_expr:
+            sp_or_py_expr = None
     except:
         sp_or_py_expr = None
 
@@ -185,6 +191,20 @@ def sympy_simplify(sympy_expr: Expr):
         raise RuntimeError
 
 
+def sympy_abs(sympy_expr: Expr):
+
+    @timeout(TIMEOUT_SECONDS, exception_message=TIMEOUT_MESSAGE)
+    def _sympy_abs(sympy_expr):
+        # return sympy.Abs(sympy_expr)
+        return abs(sympy_expr) 
+    
+    try:
+        return _sympy_abs(sympy_expr)
+    except Exception as e:
+        print(("{}: {}".format(type(e).__name__, str(e))))
+        raise RuntimeError
+
+
 def _are_equal_latex_sympy(
     gt_latex_sympy: Any, 
     gv_latex_sympy: Any,
@@ -293,10 +313,10 @@ def _are_equal_latex_sympy(
         return _are_equal_latex_sympy(gt_re, gv_re, gt_re_type, gv_re_type) \
             and _are_equal_latex_sympy(gt_im, gv_im, gt_im_type, gv_im_type)
 
-    if gt_type == ANSWER_TYPE_EXPR and gv_type == ANSWER_TYPE_EXPR:
+    if gt_type == gv_type == ANSWER_TYPE_EXPR:
         gt_latex_sympy, gt_is_cplx = expr_with_only_i(gt_latex_sympy)
         gv_latex_sympy, gv_is_cplx = expr_with_only_i(gv_latex_sympy)
-        if gt_is_cplx and gv_is_cplx:
+        if gt_is_cplx or gv_is_cplx:
             return _are_equal_latex_sympy(gt_latex_sympy, gv_latex_sympy, ANSWER_TYPE_CPLX, ANSWER_TYPE_CPLX)
     
     if gt_type == ANSWER_TYPE_FUNC or gv_type == ANSWER_TYPE_FUNC:
@@ -307,6 +327,11 @@ def _are_equal_latex_sympy(
             gv_latex_sympy = gv_latex_sympy.rhs
             gv_type = _get_sympy_type(gv_latex_sympy)
         return _are_equal_latex_sympy(gt_latex_sympy, gv_latex_sympy, gt_type, gv_type)
+
+    if gt_latex_sympy.is_number:
+        gt_latex_sympy = gt_latex_sympy.evalf()
+    if gv_latex_sympy.is_number:
+        gv_latex_sympy = gv_latex_sympy.evalf()
 
     # expand
     try:
@@ -325,11 +350,11 @@ def _are_equal_latex_sympy(
             return True
 
         if ltx_simplified.is_number:
-            if gt_latex_sympy.free_symbols or gt_latex_sympy.is_Integer or abs(gt_latex_sympy) >= 1:
+            if gt_latex_sympy.free_symbols or gt_latex_sympy.is_Integer or sympy_abs(gt_latex_sympy) >= 1:
                 # TODO: should check coeff of var in ltx_simplified.free_symbols < EPSILON
-                diff_equal = abs(ltx_simplified) < EPSILON
-            elif gt_latex_sympy.is_number and abs(gt_latex_sympy) > 0:
-                diff_equal = (abs(ltx_simplified / gt_latex_sympy) < EPSILON)
+                diff_equal = sympy_abs(ltx_simplified) < EPSILON
+            elif gt_latex_sympy.is_number and sympy_abs(gt_latex_sympy) > 0:
+                diff_equal = (sympy_abs(ltx_simplified / gt_latex_sympy) < EPSILON)
     except:
         pass
 
@@ -343,7 +368,6 @@ def _are_equal_latex_sympy(
     #       if x > 0, sqrt(x) * sqrt(1/x) = 1
     #       if x < 0, sqrt(x) * sqrt(1/x) = -1
     try:
-
         if gt_latex_sympy.free_symbols and gv_latex_sympy.free_symbols and gt_latex_sympy.free_symbols == gv_latex_sympy.free_symbols:
             gt_symbols = list(gt_latex_sympy.free_symbols)
             flag = True
@@ -440,18 +464,18 @@ def are_equal_under_sympy(
             simplified = sympy_simplify(sympy_diff)
             if gt_latex_sympy is not None:
                 if gt_latex_sympy.is_number:
-                    if sympy.Abs(gt_latex_sympy) >= 1:
-                        if abs(simplified) <= 5e-3:
+                    if sympy_abs(gt_latex_sympy) >= 1:
+                        if sympy_abs(simplified) <= 5e-3:
                             are_equal = True
                             break
-                        if abs(simplified).evalf() <= 5e-3:
+                        if sympy_abs(simplified).evalf() <= 5e-3:
                             are_equal = True
                             break
                     else:
-                        if abs(simplified) <= sympy.Abs(gt_latex_sympy) * EPSILON:
+                        if sympy_abs(simplified) <= sympy_abs(gt_latex_sympy) * EPSILON:
                             are_equal = True
                             break
-                        if abs(simplified).evalf() <= sympy.Abs(gt_latex_sympy) * EPSILON:
+                        if sympy_abs(simplified).evalf() <= sympy_abs(gt_latex_sympy) * EPSILON:
                             are_equal = True
                             break
                 elif gt_latex_sympy.free_symbols:

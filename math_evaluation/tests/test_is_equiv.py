@@ -42,6 +42,10 @@ class TestIsEquiv(unittest.TestCase):
     def test_is_equiv_real_or_list(self):
         verbose = False
 
+        test_in = "11,\! 111,\! 111,\! 100"
+        test_out = "11111111100"
+        self.assertTrue(_test_is_equiv(test_in, test_out, verbose=verbose))
+
         test_in = "1 1/2"
         test_out = "1.5"
         self.assertTrue(_test_is_equiv(test_in, test_out, verbose=verbose))
@@ -199,6 +203,10 @@ class TestIsEquiv(unittest.TestCase):
         test_out = "$4/3-7x/6$"
         self.assertTrue(_test_is_equiv(test_in, test_out, verbose=verbose))
 
+        test_in = "(2x+3)(2x -1)(2x+1)"
+        test_out = "(2x - 1)(2x + 1)(2x + 3)"
+        self.assertTrue(_test_is_equiv(test_in, test_out, verbose=verbose))
+
     def test_is_equiv_matrix(self):
         verbose = False
 
@@ -247,6 +255,18 @@ class TestIsEquiv(unittest.TestCase):
         test_in = "x \\in [0.5, \\infty)"
         test_out = "[1/2, \\infty)"
         self.assertTrue(_test_is_equiv(test_in, test_out, verbose=verbose))
+
+        test_in = "[1,+\\infty)"
+        test_out = "[2^{\\frac{1}{2^{1000}}}, \\infty)"
+        self.assertTrue(_test_is_equiv(test_in, test_out, verbose=verbose))
+
+        test_in = "[-3,2]"
+        test_out = "(-3,2)"
+        self.assertFalse(_test_is_not_equiv(test_in, test_out, verbose=verbose))
+
+        test_in = "[1, 2)"
+        test_out = "[x, y)"
+        self.assertFalse(_test_is_not_equiv(test_in, test_out, verbose=verbose))
 
     def test_is_equiv_coordinate(self):
         verbose = False

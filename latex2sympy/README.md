@@ -27,3 +27,8 @@ latex2sympy(r"\emptyset")
 latex2sympy("\\int(x dx)")
 latex2sympy("\\int(x dx)")
 ```
+
+# How to contribute
+1. Modify the file `PS.g4` with customized syntax
+2. Modify the file `latex2sympy2.py` accordingly
+3. Compile with cmd `java -jar antlr-4.11.1-complete.jar PS.g4 -o gen` to update the files within folder `gen`

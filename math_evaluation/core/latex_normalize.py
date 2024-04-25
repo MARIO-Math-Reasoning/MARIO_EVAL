@@ -115,14 +115,6 @@ def _str_to_mat(x: str):
     return latex2sympy(x)
 
 
-def _str_to_list(x: str):
-    try:
-        x = eval(x)
-    except:
-        pass
-    return x
-
-
 def _str_matrix_normalize(expr: str):
     if "{cases}" in expr:
         expr = expr.replace("{cases}", "{matrix}")
@@ -144,8 +136,18 @@ def _str_to_interval(x: str):
                 int_start, int_end = and_interval.split(',')
                 int_start = latex2sympy(int_start.replace('(', '').replace('[', ''))
                 int_end = latex2sympy(int_end.replace(')', '').replace(']', ''))
-                if int_start > int_end:
+                # check validation
+                if int_start.is_number:
+                    int_start = int_start.evalf()
+                    if _is_int(int_start):
+                        int_start = sympy.Integer(int_start)
+                if int_end.is_number:
+                    int_end = int_end.evalf()
+                    if _is_int(int_end):
+                        int_end = sympy.Integer(int_end)
+                if int_start.is_number and int_end.is_number and int_start > int_end:
                     raise Exception('Illegal Interval range')
+                # define sympy Interval
                 temp_int = sympy.Interval(int_start, int_end, left_open='(' in and_interval, right_open=')' in and_interval)
                 if _or_interval.is_empty:
                     _or_interval = temp_int
@@ -185,19 +187,8 @@ def _str_to_decimal(digits: str, base: str):
 
 
 def _strip_properly_formatted_commas(expr: str):
-    # We want to be careful because we don't want to strip tuple commas
-    regex = r"(\d)(,)(\d\d\d)($|\D)"
-    p1 = re.compile(regex)
-    while True:
-        # \1 = \d       keep
-        # \2 = ,        remove
-        # \3 = \d\d\d   keep
-        # \4 = $|\D     keep
-        next_expr = p1.sub(r"\1\3\4", expr)
-        if next_expr == expr:
-            break
-        expr = next_expr
-    return next_expr
+    expr = re.sub(r"\d{1,3}(?:, ?\d{3})+", lambda x: x.group(0).replace(',', ''), expr)
+    return expr
 
 
 def _str_to_time_list(expr: str):
@@ -207,7 +198,10 @@ def _str_to_time_list(expr: str):
     if match:
         hour, meridiem = match.group(1, 2)
         if "p.m." in meridiem.lower() or "pm" in meridiem.lower():
-            hour = str(int(hour) % 12 + 12)
+            hour = {
+                str(int(hour) % 12),
+                str(int(hour) % 12 + 12),
+            }
         return hour
 
     # case 2: am/pm is optional, but : is must, e.g., 20:00, 8:00pm
@@ -216,21 +210,44 @@ def _str_to_time_list(expr: str):
     if match:
         hour, minute, second, meridiem = match.group(1, 2, 3, 4)
         # second and meridem could be None
-        if meridiem and ("p.m." in meridiem.lower() or "pm" in meridiem.lower()):
-            hour = str(int(hour) % 12 + 12)     # 2pm -> 14, 14pm -> 14
+        if meridiem and ("p.m." in meridiem.lower() or "pm" in meridiem.lower()):  
+            hour = [
+                str(int(hour) % 12),
+                str(int(hour) % 12 + 12),
+            ]
         if second and int(second) != 0:
+            if isinstance(hour, list):
+                return {
+                    f"[{hour[0]}, {int(minute)}, {int(second)}]",
+                    f"[{hour[1]}, {int(minute)}, {int(second)}]",
+                }
             return f"[{int(hour)}, {int(minute)}, {int(second)}]"
         else:
             # only consider hour and minute
             if int(minute) == 0:
-                return hour
+                if isinstance(hour, list):
+                    return set(hour)
+                return str(int(hour))
             else:
+                if isinstance(hour, list):
+                    return {
+                        f"[{hour[0]}, {int(minute)}]",
+                        f"[{hour[1]}, {int(minute)}]",
+                    }
                 return f"[{int(hour)}, {int(minute)}]"
 
     return expr
 
 
-def string_normalize(expr: str, is_ground_truth: bool = False):
+def string_normalize(expr: str):
+    try:
+        return _string_normalize(expr)
+    except Exception as e:
+        print(("{}: {}".format(type(e).__name__, str(e))))
+        return expr
+
+
+def _string_normalize(expr: str):
     if expr is None:
         return None
     
@@ -268,21 +285,18 @@ def string_normalize(expr: str, is_ground_truth: bool = False):
         base = m.group(2) if m.group(2) else m.group(3)
         # return f"[{digits}, {base}]"
         # sometimes the answer may not have "_base", we adopt the following logic.
-        if is_group_truth:
-            decimal_digits = _str_to_decimal(digits, base)
-            return {
-                digits,
-                str(decimal_digits),
-            }
-        else:
-            return digits
+        decimal_digits = _str_to_decimal(digits, base)
+        return {
+            digits,
+            str(decimal_digits),
+        }
 
     # Remove \\% and transform to two possible values for ground truth
     # comparable grd v.s. prd: 10% v.s. 10.0%, 10% v.s. 0.1, 10% v.s. 10
     if "%" in expr:
         expr = expr.replace("\\%", "%")
         expr = expr.replace("%", "")
-        if _is_float(expr) and is_ground_truth:
+        if _is_float(expr):
             return {
                 str(float(expr) / 100), 
                 str(float(expr)),
@@ -318,6 +332,8 @@ def string_normalize(expr: str, is_ground_truth: bool = False):
     # units in \\text{xxx}
     # Special case for time, transform to list, e.g., "08:30 \\text{pm}" -> "[8, 30]"
     expr = _str_to_time_list(expr)
+    if isinstance(expr, set):
+        return expr
 
     # remove unit
     # we only deal with valid power,
@@ -353,19 +369,16 @@ def string_normalize(expr: str, is_ground_truth: bool = False):
     # process X^\\circ to X or X/180 * \\pi 
     circ_pattern = r"\^ *(?:\{ *\\circ *\}|\\circ)"
     if re.search(circ_pattern, expr):
-        if is_ground_truth:
-            # first answer: just remove circ
-            expr1 = re.sub(circ_pattern, "", expr)
-            # second second: change xxx^\\circ => xxx / 180 * \\pi
-            regex = r"(\d*)(\.\d+)? *\^ *(?:\{ *\\circ *\}|\\circ)"
-            pattern = re.compile(regex)
-            expr2 = pattern.sub(r"\1\2/180*\\pi", expr)
-            return {
-                further_string_normalize(expr1),
-                further_string_normalize(expr2),
-            }
-        else:
-            expr = re.sub(circ_pattern, "", expr)
+        # first answer: just remove circ
+        expr1 = re.sub(circ_pattern, "", expr)
+        # second second: change xxx^\\circ => xxx / 180 * \\pi
+        regex = r"(\d*)(\.\d+)? *\^ *(?:\{ *\\circ *\}|\\circ)"
+        pattern = re.compile(regex)
+        expr2 = pattern.sub(r"\1\2/180*\\pi", expr)
+        return {
+            further_string_normalize(expr1),
+            further_string_normalize(expr2),
+        }
 
     return further_string_normalize(expr)
 
