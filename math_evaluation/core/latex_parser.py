@@ -191,6 +191,19 @@ def sympy_simplify(sympy_expr: Expr):
         raise RuntimeError
 
 
+def sympy_expand_equal(gt_sympy_expr: Expr, gv_sympy_expr: Expr) -> bool:
+
+    @timeout(TIMEOUT_SECONDS, exception_message=TIMEOUT_MESSAGE)
+    def _sympy_expand_equal(gt_sympy_expr, gv_sympy_expr):
+        return bool(gt_sympy_expr.expand(trig=True) == gv_sympy_expr.expand(trig=True))
+    
+    try:
+        return _sympy_expand_equal(gt_sympy_expr, gv_sympy_expr)
+    except Exception as e:
+        print(("{}: {}".format(type(e).__name__, str(e))))
+        return False
+
+
 def sympy_abs(sympy_expr: Expr):
 
     @timeout(TIMEOUT_SECONDS, exception_message=TIMEOUT_MESSAGE)
@@ -334,10 +347,7 @@ def _are_equal_latex_sympy(
         gv_latex_sympy = gv_latex_sympy.evalf()
 
     # expand
-    try:
-        ltx_ltx_equal = bool(gt_latex_sympy.expand(trig=True) == gv_latex_sympy.expand(trig=True))
-    except:
-        ltx_ltx_equal = False
+    ltx_ltx_equal = sympy_expand_equal(gt_latex_sympy, gv_latex_sympy)
 
     if ltx_ltx_equal:
         return True

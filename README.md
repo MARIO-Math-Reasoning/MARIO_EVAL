@@ -33,6 +33,14 @@ True
 > pip install -e .
 ```
 
+## Evaluation on [MATH](https://github.com/hendrycks/math) dataset
+| Model                     | Accuracy |
+| ------------------------- | -------- |
+| [ToRA-Code-34B](https://github.com/microsoft/ToRA/tree/aeb21126d28347f595d87f2822cb92bfe32f00e8/src/outputs/llm-agents/tora-code-34b-v1.0/math)  | 0.5122 |
+| [ToRA-70B](https://github.com/microsoft/ToRA/tree/aeb21126d28347f595d87f2822cb92bfe32f00e8/src/outputs/llm-agents/tora-70b-v1.0/math) | 0.5002 |
+| [DeepSeek-Math-Instruct-7B](https://github.com/deepseek-ai/DeepSeek-Math/blob/main/evaluation/outputs.zip) | 0.5722 |
+
+
 ## Unittest
 `python -m unittest math_evaluation/tests/test_is_equiv.py`
 

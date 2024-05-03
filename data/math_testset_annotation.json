@@ -17702,7 +17702,7 @@
     {
         "index": 2949,
         "question": "Find all solutions to the equation $$(z^2 - 3z + 1)^2 - 3(z^2 - 3z + 1) + 1 = z.$$",
-        "answer": "1+\\sqrt 2,\\ 1-\\sqrt 2,\\ 2+\\sqrt 3,\\ 2-\\sqrt 3",
+        "answer": "1+\\sqrt 2, 1-\\sqrt 2, 2+\\sqrt 3, 2-\\sqrt 3",
         "human_type": "Set"
     },
     {

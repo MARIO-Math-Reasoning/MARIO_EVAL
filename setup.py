@@ -25,8 +25,9 @@ setuptools.setup(
         "License :: OSI Approved :: MIT License",
         "Operating System :: OS Independent",
     ],
-    packages=setuptools.find_packages(exclude=("math_evaluation", "math_evaluation.*")),
+    # packages=setuptools.find_packages(exclude=("math_evaluation", "math_evaluation.*")),
+    packages=setuptools.find_packages(exclude=()),
     install_requires=get_requirements(),
     py_modules = ["math_evaluation"],
-    version='0.2.5',
+    version='0.2.6',
 )

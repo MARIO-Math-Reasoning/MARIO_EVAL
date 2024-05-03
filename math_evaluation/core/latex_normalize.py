@@ -11,11 +11,9 @@ from .constants import *
 
 def _parse_latex(expr: str) -> str:
     """Attempts to parse latex to an expression sympy can read."""
-    expr = expr.replace("\frac", "\\frac")
     expr = expr.replace("\\tfrac", "\\frac")
     expr = expr.replace("\\cfrac", "\\frac")
     expr = expr.replace("\\dfrac", "\\frac")
-    expr = expr.replace("\\\\frac", " \\frac")  # Play nice with mixed numbers.
 
     # expr = latex2text.LatexNodes2Text().latex_to_text(expr).replace("\n", "")
     # expr = add_parentheses_after_keyword(expr, [ADD_PARENTHESES_AFTER_KEYWORD[0]], candidate_num=1)
@@ -257,8 +255,8 @@ def _string_normalize(expr: str):
     # latex matrix has \\\\ which cannot be replaced, e.g., \\begin{matrix} 1 & 2 \\\\ 3 & 4 \\end{matrix}
     expr = _str_matrix_normalize(expr)
 
-    # Remove enclosing `\text{}`.
-    m = re.search(r"^\\\s*text{\s*(?P<text>.+?)}$", expr, re.DOTALL)
+    # Remove enclosing `\\text{}` or `\\mbox{}`.
+    m = re.search(r"^\\\s*(text|mbox){\s*(?P<text>.+?)}$", expr, re.DOTALL)
     if m:
         expr = m.group("text")
         return string_normalize(expr)
