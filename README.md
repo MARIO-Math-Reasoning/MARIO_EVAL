@@ -38,6 +38,7 @@ True
 | ------------------------- | -------- | -------- |
 | [ToRA-Code-34B](https://github.com/microsoft/ToRA/tree/aeb21126d28347f595d87f2822cb92bfe32f00e8/src/outputs/llm-agents/tora-code-34b-v1.0/math)  | 0.5122 | [0.51](https://github.com/microsoft/ToRA/blob/aeb21126d28347f595d87f2822cb92bfe32f00e8/src/outputs/llm-agents/tora-code-34b-v1.0/math/test_tora_-1_seed0_t0.0_s0_e5000.metrics) |
 | [ToRA-70B](https://github.com/microsoft/ToRA/tree/aeb21126d28347f595d87f2822cb92bfe32f00e8/src/outputs/llm-agents/tora-70b-v1.0/math) | 0.5002 | [0.497](https://github.com/microsoft/ToRA/blob/aeb21126d28347f595d87f2822cb92bfe32f00e8/src/outputs/llm-agents/tora-70b-v1.0/math/test_tora_-1_seed0_t0.0_s0_e5000.metrics) |
+| [DeepSeek-Math-Base-7B](https://github.com/deepseek-ai/DeepSeek-Math/tree/21cc5c6701a708a11cee0af8b1fe884e3294dc7a/evaluation) | 0.3318 | [0.3142](https://github.com/deepseek-ai/DeepSeek-Math/tree/21cc5c6701a708a11cee0af8b1fe884e3294dc7a/evaluation) |
 | [DeepSeek-Math-Instruct-7B](https://github.com/deepseek-ai/DeepSeek-Math/tree/21cc5c6701a708a11cee0af8b1fe884e3294dc7a/evaluation) | 0.5722 | [0.575](https://github.com/deepseek-ai/DeepSeek-Math/tree/21cc5c6701a708a11cee0af8b1fe884e3294dc7a/evaluation) |
 | [DeepSeek-Math-RL-7B](https://github.com/deepseek-ai/DeepSeek-Math/tree/21cc5c6701a708a11cee0af8b1fe884e3294dc7a/evaluation) | 0.596 | [0.5878](https://github.com/deepseek-ai/DeepSeek-Math/tree/21cc5c6701a708a11cee0af8b1fe884e3294dc7a/evaluation) |
 
