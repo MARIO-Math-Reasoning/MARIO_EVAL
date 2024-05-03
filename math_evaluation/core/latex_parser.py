@@ -182,6 +182,8 @@ def sympy_simplify(sympy_expr: Expr):
 
     @timeout(TIMEOUT_SECONDS, exception_message=TIMEOUT_MESSAGE)
     def _sympy_simplify(sympy_expr):
+        if sympy_expr.is_number:
+            return sympy_expr.evalf()
         return sympy.simplify(sympy_expr)
     
     try:

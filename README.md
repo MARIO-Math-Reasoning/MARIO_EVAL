@@ -5,6 +5,8 @@ This is the official repository for the paper [MARIO Eval](https://arxiv.org/abs
 ## Evaluation on [MATH](https://github.com/hendrycks/math) dataset
 | Model                     | Accuracy | Reported |
 | ------------------------- | -------- | -------- |
+| [MathCoder-CL-7B](https://github.com/mathllm/MathCoder/blob/77b46cd80399b488c8432c4cb6d645369749f7b5/outs/MathCoder-CL-7b/MATH/MATH_test_result-20230917-1756.jsonl) | 0.3066 | [0.3074](https://github.com/mathllm/MathCoder/tree/77b46cd80399b488c8432c4cb6d645369749f7b5/outs/MathCoder-CL-7b) |
+| [MathCoder-CL-34B](https://github.com/mathllm/MathCoder/blob/77b46cd80399b488c8432c4cb6d645369749f7b5/outs/MathCoder-CL-34b/MATH/MATH_test_result-20230916-0325.jsonl) | 0.4586 | [0.461](https://github.com/mathllm/MathCoder/tree/77b46cd80399b488c8432c4cb6d645369749f7b5/outs/MathCoder-CL-34b/MATH) |
 | [ToRA-Code-34B](https://github.com/microsoft/ToRA/tree/aeb21126d28347f595d87f2822cb92bfe32f00e8/src/outputs/llm-agents/tora-code-34b-v1.0/math)  | 0.5122 | [0.51](https://github.com/microsoft/ToRA/blob/aeb21126d28347f595d87f2822cb92bfe32f00e8/src/outputs/llm-agents/tora-code-34b-v1.0/math/test_tora_-1_seed0_t0.0_s0_e5000.metrics) |
 | [ToRA-70B](https://github.com/microsoft/ToRA/tree/aeb21126d28347f595d87f2822cb92bfe32f00e8/src/outputs/llm-agents/tora-70b-v1.0/math) | 0.5002 | [0.497](https://github.com/microsoft/ToRA/blob/aeb21126d28347f595d87f2822cb92bfe32f00e8/src/outputs/llm-agents/tora-70b-v1.0/math/test_tora_-1_seed0_t0.0_s0_e5000.metrics) |
 | [DeepSeek-Math-Base-7B](https://github.com/deepseek-ai/DeepSeek-Math/tree/21cc5c6701a708a11cee0af8b1fe884e3294dc7a/evaluation) | 0.3318 | [0.3142](https://github.com/deepseek-ai/DeepSeek-Math/tree/21cc5c6701a708a11cee0af8b1fe884e3294dc7a/evaluation) |
