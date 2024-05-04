@@ -3,7 +3,7 @@ import random
 import re
 import sympy
 
-from typing import Tuple, Any
+from typing import Tuple, Any, Dict, Optional
 
 from sympy.parsing.latex import parse_latex
 from sympy.parsing import sympy_parser
@@ -180,7 +180,7 @@ def expr_with_only_i(latex_sympy):
 
 def sympy_simplify(sympy_expr: Expr):
 
-    @timeout(TIMEOUT_SECONDS, exception_message=TIMEOUT_MESSAGE)
+    @timeout(TIMEOUT_SECONDS, exception_message=TIMEOUT_MESSAGE.format(func_name="sympy_simplify", seconds=TIMEOUT_SECONDS))
     def _sympy_simplify(sympy_expr):
         if sympy_expr.is_number:
             return sympy_expr.evalf()
@@ -195,7 +195,7 @@ def sympy_simplify(sympy_expr: Expr):
 
 def sympy_expand_equal(gt_sympy_expr: Expr, gv_sympy_expr: Expr) -> bool:
 
-    @timeout(TIMEOUT_SECONDS, exception_message=TIMEOUT_MESSAGE)
+    @timeout(TIMEOUT_SECONDS, exception_message=TIMEOUT_MESSAGE.format(func_name="sympy_expand_equal", seconds=TIMEOUT_SECONDS))
     def _sympy_expand_equal(gt_sympy_expr, gv_sympy_expr):
         return bool(gt_sympy_expr.expand(trig=True) == gv_sympy_expr.expand(trig=True))
     
@@ -208,7 +208,7 @@ def sympy_expand_equal(gt_sympy_expr: Expr, gv_sympy_expr: Expr) -> bool:
 
 def sympy_abs(sympy_expr: Expr):
 
-    @timeout(TIMEOUT_SECONDS, exception_message=TIMEOUT_MESSAGE)
+    @timeout(TIMEOUT_SECONDS, exception_message=TIMEOUT_MESSAGE.format(func_name="sympy_abs", seconds=TIMEOUT_SECONDS))
     def _sympy_abs(sympy_expr):
         # return sympy.Abs(sympy_expr)
         return abs(sympy_expr) 
@@ -218,6 +218,42 @@ def sympy_abs(sympy_expr: Expr):
     except Exception as e:
         print(("{}: {}".format(type(e).__name__, str(e))))
         raise RuntimeError
+
+
+def sympy_evalf(
+    sympy_expr: Expr, 
+    symbols_: Optional[Dict[Symbol, float]] = None,
+) -> Optional[float]:
+
+    @timeout(TIMEOUT_SECONDS, exception_message=TIMEOUT_MESSAGE.format(func_name="sympy_evalf", seconds=TIMEOUT_SECONDS))
+    def _sympy_evalf(sympy_expr, symbols_=None):
+        return sympy_expr.evalf(subs=symbols_)
+        
+    try:
+        return _sympy_evalf(sympy_expr, symbols_)
+    except Exception as e:
+        print(("{}: {}".format(type(e).__name__, str(e))))
+        return None
+
+
+def _numerical_equal(
+    gt_latex_sympy,
+    gv_latex_sympy,
+    rng,
+) -> bool:
+    if not gt_latex_sympy.free_symbols == gv_latex_sympy.free_symbols:
+        return False
+    
+    gt_symbols = list(gt_latex_sympy.free_symbols)
+    flag = True
+    for _ in range(10):
+        symbols_ = {a: rng(1, 10) for a in gt_symbols}
+        temp_gt = sympy_evalf(gt_latex_sympy, symbols_)
+        temp_gv = sympy_evalf(gv_latex_sympy, symbols_)
+        if temp_gt is None or temp_gv is None or not temp_gt.equals(temp_gv):
+            flag = False
+            break
+    return flag
 
 
 def _are_equal_latex_sympy(
@@ -380,20 +416,13 @@ def _are_equal_latex_sympy(
     #       if x > 0, sqrt(x) * sqrt(1/x) = 1
     #       if x < 0, sqrt(x) * sqrt(1/x) = -1
     try:
-        if gt_latex_sympy.free_symbols and gv_latex_sympy.free_symbols and gt_latex_sympy.free_symbols == gv_latex_sympy.free_symbols:
-            gt_symbols = list(gt_latex_sympy.free_symbols)
-            flag = True
-            for _ in range(10):
-                symbols_ = {a: random.randint(1, 10) for a in gt_symbols}
-                try:
-                    temp_gt = gt_latex_sympy.evalf(subs=symbols_)
-                    temp_gv = gv_latex_sympy.evalf(subs=symbols_)
-                    if not temp_gt.equals(temp_gv):
-                        flag = False
-                except:
-                    pass
-            if flag:
-                return True
+        if gt_latex_sympy.free_symbols and gv_latex_sympy.free_symbols:
+            # integer
+            num_equal = _numerical_equal(gt_latex_sympy, gv_latex_sympy, random.randint)
+            if not num_equal:
+                # float 
+                num_equal = _numerical_equal(gt_latex_sympy, gv_latex_sympy, random.uniform)
+            return num_equal
     except:
         return False
 

@@ -1,5 +1,5 @@
 TIMEOUT_SECONDS = 15
-TIMEOUT_MESSAGE = f"Execution of the code snippet has timed out for exceeding {TIMEOUT_SECONDS} seconds."
+TIMEOUT_MESSAGE = "Execution of function `{func_name}` has timed out for exceeding {seconds} seconds."
 
 ANSWER_TYPE_CPLX = "complex"
 ANSWER_TYPE_VEC = "vector"
