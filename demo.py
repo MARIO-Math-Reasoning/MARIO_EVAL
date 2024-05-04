@@ -44,4 +44,21 @@ if __name__ == "__main__":
     ground_truth = ["\\left(\tfrac32, -\\tfrac52\\right)", "\\left(-\\tfrac52, -\\tfrac52\\right)"]
     prediction = "(-2.5,-2.5)"
     eval_res = is_equiv_MATH(ground_truth, prediction, verbose=False)
-    print(eval_res)   
+    assert eval_res
+
+    # Another interesting example     
+    ground_truth = "1"
+    prediction = "-(-1)^\\frac{{57}}{{85}}\\left({1}+{e}^{{\\frac{{14}}{{85}}}{i}\\pi}\\right)\\left({1}+{e}^{{\\frac{{28}}{{85}}}{i}\\pi}\\right)\\left({1}+{e}^{{\\frac{{46}}{{85}}}{i}\\pi}\\right)\\left({1}+{e}^{{\\frac{{54}}{{85}}}{i}\\pi}\\right)\\left({1}+{e}^{{\\frac{{56}}{{85}}}{i}\\pi}\\right)\\left({1}+{e}^{{\\frac{{58}}{{85}}}{i}\\pi}\\right)\\left({1}+{e}^{{\\frac{{62}}{{85}}}{i}\\pi}\\right)\\left({1}+{e}^{{\\frac{{78}}{{85}}}{i}\\pi}\\right)"
+    eval_res = is_equiv_MATH(ground_truth, prediction, verbose=False)
+    assert eval_res
+
+    # Let's verify it
+    from latex2sympy.latex2sympy2 import latex2sympy
+    import sympy as sp
+
+    prediction = prediction.replace("{i}", "{I}")
+    pred_val = latex2sympy(prediction)
+    print("ground_truth: ", ground_truth)
+    print("prediction: ", pred_val)
+    print("Re of prediction: ", sp.re(pred_val).evalf())
+    print("Im of prediction: ", sp.im(pred_val).evalf())

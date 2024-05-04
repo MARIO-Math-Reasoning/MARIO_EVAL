@@ -256,6 +256,33 @@ def _numerical_equal(
     return flag
 
 
+def _diff_equal(
+    gt_latex_sympy,
+    diff_latex_sympy,
+) -> bool:
+    if _is_sympy_zero(diff_latex_sympy):
+        return True
+
+    def abs_smaller_than_threshold(latex_sympy, threshold: float) -> bool:
+        try:
+            abs_latex_sympy = sympy_abs(latex_sympy)
+            return abs_latex_sympy < threshold or sympy_evalf(abs_latex_sympy) < threshold
+        except:
+            return False
+
+    diff_equal = False
+    if diff_latex_sympy.is_number:
+        if gt_latex_sympy.free_symbols or gt_latex_sympy.is_Integer:
+            # TODO: should check coeff of var in diff_latex_sympy.free_symbols < EPSILON
+            diff_equal = abs_smaller_than_threshold(diff_latex_sympy, EPSILON)
+        elif sympy_abs(gt_latex_sympy) >= 1:
+            diff_equal = abs_smaller_than_threshold(diff_latex_sympy, 5 * EPSILON)
+        elif gt_latex_sympy.is_number and sympy_abs(gt_latex_sympy) > 0:
+            diff_equal = abs_smaller_than_threshold(diff_latex_sympy / gt_latex_sympy, EPSILON)
+
+    return diff_equal
+
+
 def _are_equal_latex_sympy(
     gt_latex_sympy: Any, 
     gv_latex_sympy: Any,
@@ -380,12 +407,16 @@ def _are_equal_latex_sympy(
         return _are_equal_latex_sympy(gt_latex_sympy, gv_latex_sympy, gt_type, gv_type)
 
     if gt_latex_sympy.is_number:
-        gt_latex_sympy = gt_latex_sympy.evalf()
+        gt_latex_sympy = sympy_evalf(gt_latex_sympy)
     if gv_latex_sympy.is_number:
-        gv_latex_sympy = gv_latex_sympy.evalf()
+        gv_latex_sympy = sympy_evalf(gv_latex_sympy)
 
     # expand
-    ltx_ltx_equal = sympy_expand_equal(gt_latex_sympy, gv_latex_sympy)
+    ltx_ltx_equal = False
+    try:
+        ltx_ltx_equal = sympy_expand_equal(gt_latex_sympy, gv_latex_sympy)
+    except:
+        pass
 
     if ltx_ltx_equal:
         return True
@@ -393,16 +424,8 @@ def _are_equal_latex_sympy(
     # simplify
     diff_equal = False
     try:
-        ltx_simplified = sympy_simplify(gt_latex_sympy - gv_latex_sympy)
-        if _is_sympy_zero(ltx_simplified):
-            return True
-
-        if ltx_simplified.is_number:
-            if gt_latex_sympy.free_symbols or gt_latex_sympy.is_Integer or sympy_abs(gt_latex_sympy) >= 1:
-                # TODO: should check coeff of var in ltx_simplified.free_symbols < EPSILON
-                diff_equal = sympy_abs(ltx_simplified) < EPSILON
-            elif gt_latex_sympy.is_number and sympy_abs(gt_latex_sympy) > 0:
-                diff_equal = (sympy_abs(ltx_simplified / gt_latex_sympy) < EPSILON)
+        diff_latex_sympy = sympy_simplify(gt_latex_sympy - gv_latex_sympy)
+        diff_equal = _diff_equal(gt_latex_sympy, diff_latex_sympy)
     except:
         pass
 
@@ -495,35 +518,23 @@ def are_equal_under_sympy(
     except:
         pass
 
-    try:
-        expr = f"({ground_truth_normalized})-({given_normalized})"
-        gt_latex_sympy_candidates = _sympy_parse(ground_truth_normalized)
-        sympy_diff_candidates = _sympy_parse(expr)
-        for gt_latex_sympy, sympy_diff in zip(gt_latex_sympy_candidates, sympy_diff_candidates):
-            if sympy_diff is None:
-                continue
-            simplified = sympy_simplify(sympy_diff)
-            if gt_latex_sympy is not None:
-                if gt_latex_sympy.is_number:
-                    if sympy_abs(gt_latex_sympy) >= 1:
-                        if sympy_abs(simplified) <= 5e-3:
-                            are_equal = True
-                            break
-                        if sympy_abs(simplified).evalf() <= 5e-3:
-                            are_equal = True
-                            break
-                    else:
-                        if sympy_abs(simplified) <= sympy_abs(gt_latex_sympy) * EPSILON:
-                            are_equal = True
-                            break
-                        if sympy_abs(simplified).evalf() <= sympy_abs(gt_latex_sympy) * EPSILON:
-                            are_equal = True
-                            break
-                elif gt_latex_sympy.free_symbols:
-                    if _is_sympy_zero(simplified):
-                        are_equal = True
-                        break
-    except:
-        pass
+    # try:
+    #     expr = f"({ground_truth_normalized})-({given_normalized})"
+    #     gt_latex_sympy_candidates = _sympy_parse(ground_truth_normalized)
+    #     sympy_diff_candidates = _sympy_parse(expr)
+    #     for gt_latex_sympy in gt_latex_sympy_candidates:
+    #         if gt_latex_sympy is None:
+    #             continue
+    #         for sympy_diff in sympy_diff_candidates:
+    #             if sympy_diff is None:
+    #                 continue
+    #             simplified_diff = sympy_simplify(sympy_diff)
+    #             if _diff_equal(gt_latex_sympy, simplified_diff):
+    #                 are_equal = True
+    #                 break
+    #         if are_equal:
+    #             break
+    # except:
+    #     pass
 
     return are_equal
