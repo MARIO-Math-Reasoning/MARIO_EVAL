@@ -19,7 +19,7 @@ def get_requirements() -> List[str]:
 setuptools.setup(
     name="math_evaluation",
     description="A utility for determining whether 2 latex answers for a problem are equivalent.",
-    url="https://github.com/MARIO-Math-Reasoning/math_evaluation.git",
+    url="https://github.com/MARIO-Math-Reasoning/MATH_EVAL.git",
     classifiers=[
         "Programming Language :: Python :: 3",
         "License :: OSI Approved :: MIT License",

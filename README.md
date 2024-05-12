@@ -24,8 +24,8 @@ This is the official repository for the paper [MARIO Eval](https://arxiv.org/abs
 
 ## Use without install
 ```
-> git clone https://github.com/MARIO-Math-Reasoning/math_evaluation.git
-> cd math_evaluation
+> git clone https://github.com/MARIO-Math-Reasoning/MARIO_EVAL.git
+> cd MARIO_EVAL
 > python
 >>> from latex2sympy.latex2sympy2 import latex2sympy
 >>> latex2sympy("\\frac12")
@@ -37,8 +37,8 @@ True
 
 ## Install as Python package
 ```
-> git clone https://github.com/MARIO-Math-Reasoning/math_evaluation.git
-> cd math_evaluation
+> git clone https://github.com/MARIO-Math-Reasoning/MARIO_EVAL.git
+> cd MARIO_EVAL
 > cd latex2sympy && pip install . && cd ..
 > pip install -e .
 ```
