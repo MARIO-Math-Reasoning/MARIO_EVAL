@@ -34,7 +34,7 @@ This is the official repository for the paper [MARIO Eval](https://arxiv.org/abs
 >>> from math_evaluation import is_equiv 
 >>> is_equiv("1\\frac12", "1.5")
 True
->>> is_equiv("\\begin{pmatrix} 1.0 & 0.5 \\\\ 0.3333 & 4.0 \\end{pmatrix}", "[[1.0, 0.5],[0.3333, 4.0]]")
+>>> is_equiv("\\begin{pmatrix} 1 & \\frac12 \\\\ 1/3 & \\sqrt4 \\end{pmatrix}", "[[1.0, 1/2],[0.3333, 2.0]]")
 True
 ```
 
