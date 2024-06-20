@@ -32,7 +32,9 @@ This is the official repository for the paper [MARIO Eval](https://arxiv.org/abs
 >>> latex2sympy("\\frac12")
 1/2
 >>> from math_evaluation import is_equiv 
->>> is_equiv("\\frac12", "0.5")
+>>> is_equiv("1\\frac12", "1.5")
+True
+>>> is_equiv("\\begin{pmatrix} 1.0 & 0.5 \\\\ 0.3333 & 4.0 \\end{pmatrix}", "[[1.0, 0.5],[0.3333, 4.0]]")
 True
 ```
 
