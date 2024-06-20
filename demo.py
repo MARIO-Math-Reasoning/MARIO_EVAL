@@ -4,6 +4,7 @@ from math_evaluation import (
     string_normalize,
     are_equal_under_sympy,
     is_equiv,
+    is_equiv_type,
 )
 
 
@@ -28,6 +29,8 @@ def is_equiv_MATH(
 
 
 if __name__ == "__main__":
+    assert is_equiv_type("1,234", "(1,234)", "Vector")
+
     """
     Example:
 

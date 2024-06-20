@@ -16,7 +16,7 @@ This is the official repository for the paper [MARIO Eval](https://arxiv.org/abs
 ## Features
 - [x] sympy based equivalence of two math expressions, see `is_equiv`
 - [x] annotation of MATH testset with more robust evaluation, see `data/math_testset_annotation.json` and `demo.py`
-- [ ] integration of LLM (coming soon)
+- [x] integration of LLM
 
 ## Requirements
 1. `sympy=1.12`
