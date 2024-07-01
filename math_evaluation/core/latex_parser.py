@@ -250,7 +250,7 @@ def _numerical_equal(
         symbols_ = {a: rng(1, 10) for a in gt_symbols}
         temp_gt = sympy_evalf(gt_latex_sympy, symbols_)
         temp_gv = sympy_evalf(gv_latex_sympy, symbols_)
-        if temp_gt is None or temp_gv is None or not temp_gt.equals(temp_gv):
+        if temp_gt is None or temp_gv is None or not _diff_equal(temp_gt, temp_gt - temp_gv):
             flag = False
             break
     return flag
