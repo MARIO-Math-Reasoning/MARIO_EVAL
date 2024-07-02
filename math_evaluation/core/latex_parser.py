@@ -154,7 +154,7 @@ def _list_to_mat(list_expr, exp_rows, exp_cols):
 def _ineq_to_expr(ineq):
     if ineq.rel_op in {"<=", "<"}:
         return ineq.lhs - ineq.rhs
-    elif ineq.rel_op in {">=", "<"}:
+    elif ineq.rel_op in {">=", ">"}:
         return ineq.rhs - ineq.lhs
     else:
         raise ValueError(f"The {ineq} is not Inequality.")
