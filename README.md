@@ -21,7 +21,7 @@ This is the official repository for the paper [MARIO Eval](https://arxiv.org/abs
 ## Requirements
 1. `sympy=1.12`
 2. `antlr4-python3-runtime==4.11.1`
-3. **NOT** install gmpy2
+3. **NOT** install gmpy2, i.e., `pip uninstall gmpy2`
 
 ## Use without install
 ```
