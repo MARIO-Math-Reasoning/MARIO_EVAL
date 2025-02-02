@@ -113,7 +113,8 @@ def is_equiv_vector(
     grt_normalized = preprocess(grt_normalized)
     pre_normalized = preprocess(pre_normalized)
     try:
-        return is_equiv_possible_tuple(grt_normalized, pre_normalized, verbose)
+        is_correct, _ = is_equiv_possible_tuple(grt_normalized, pre_normalized, verbose)
+        return is_correct
     except:
         return False
 
@@ -134,7 +135,8 @@ def is_equiv_set(
     grt_normalized = preprocess(grt_normalized)
     pre_normalized = preprocess(pre_normalized)
     try:
-        return is_equiv_possible_tuple(grt_normalized, pre_normalized, verbose)
+        is_correct, _ = is_equiv_possible_tuple(grt_normalized, pre_normalized, verbose)
+        return is_correct
     except:
         return False
 
