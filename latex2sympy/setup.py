@@ -39,7 +39,7 @@ setup(
     packages=find_packages(exclude=('tests')),
     py_modules=['asciimath_printer', 'latex2sympy2'],
     install_requires=[
-        'sympy==1.12', # 1.4
-        'antlr4-python3-runtime==4.11.1' # 4.7.2
+        'sympy==1.13.1', 
+        'antlr4-python3-runtime==4.11.1'
     ],
 )

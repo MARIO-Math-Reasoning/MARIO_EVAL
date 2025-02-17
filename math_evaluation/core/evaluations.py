@@ -1,4 +1,4 @@
-from typing import Optional, Tuple
+from typing import Optional, Tuple, Union
 
 from .latex_normalize import (
     string_normalize,
@@ -15,7 +15,7 @@ from .constants import EPSILON
 import sympy
 
 
-def is_equiv(ground_truth: str, given: str, verbose: bool = False):
+def is_equiv(ground_truth: str, given: str, verbose: bool = False, fast: bool = False):
     if ground_truth is None and given is None:
         print("WARNING: Both None")
         return True
@@ -25,34 +25,53 @@ def is_equiv(ground_truth: str, given: str, verbose: bool = False):
     str_pass = ground_truth.strip() == given.strip()
     if str_pass:
         return True
-    
+
+    def default_is_equiv(ground_truth_normalized: Union[str, set], given_normalized: Union[str, set]) -> bool:
+        if verbose:
+            print(ground_truth_normalized, given_normalized)
+
+        if isinstance(ground_truth_normalized, str) and ground_truth_normalized == given_normalized:
+            return True
+
+        try:
+            # e.g., gt = 30^\\circ -> {30, pi/6}, gv = pi/6
+            if isinstance(ground_truth_normalized, set) or isinstance(given_normalized, set):
+                if isinstance(ground_truth_normalized, str):
+                    ground_truth_normalized = {ground_truth_normalized}
+                if isinstance(given_normalized, str):
+                    given_normalized = {given_normalized}
+                for gt_norm in ground_truth_normalized:
+                    for gv_norm in given_normalized:
+                        if is_latex_equiv(gt_norm, gv_norm, verbose=verbose):
+                            return True
+                return False
+            else:
+                return is_latex_equiv(ground_truth_normalized, given_normalized, verbose=verbose)
+
+        except Exception as e:
+            return False 
+
     ground_truth_normalized = string_normalize(ground_truth)
     given_normalized = string_normalize(given)
-    if verbose:
-        print(ground_truth_normalized, given_normalized)
+    default_equiv = default_is_equiv(ground_truth_normalized, given_normalized)
 
-    if isinstance(ground_truth_normalized, str):
-        str_pass = ground_truth_normalized == given_normalized
-    if str_pass:
-        return True
-
-    try:
-        # e.g., gt = 30^\\circ -> {30, pi/6}, gv = pi/6
-        if isinstance(ground_truth_normalized, set) or isinstance(given_normalized, set):
-            if isinstance(ground_truth_normalized, str):
-                ground_truth_normalized = {ground_truth_normalized}
-            if isinstance(given_normalized, str):
-                given_normalized = {given_normalized}
-            for gt_norm in ground_truth_normalized:
-                for gv_norm in given_normalized:
-                    if is_latex_equiv(gt_norm, gv_norm, verbose=verbose):
-                        return True
-            return False
-        else:
-            return is_latex_equiv(ground_truth_normalized, given_normalized, verbose=verbose)
-
-    except Exception as e:
-        return False 
+    if fast or default_equiv:
+        return default_equiv
+    else:
+        ground_truth_normalized = string_normalize(ground_truth, remove_mid_std_space=False)
+        given_normalized = string_normalize(given, remove_mid_std_space=False)
+        default_equiv_space = default_is_equiv(ground_truth_normalized, given_normalized)
+        if default_equiv_space:
+            return True
+        
+        ground_truth_normalized = string_normalize(ground_truth, lower_case=False)
+        given_normalized = string_normalize(given, lower_case=False)
+        default_equiv_case = default_is_equiv(ground_truth_normalized, given_normalized)
+        if default_equiv_case:
+            return True
+        
+        raw_equiv = are_equal_under_sympy(ground_truth, given)
+        return raw_equiv
 
 
 def is_latex_equiv(

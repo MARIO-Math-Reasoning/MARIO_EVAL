@@ -3,8 +3,7 @@ import re
 import sympy
 
 from typing import Optional
-#from pylatexenc import latex2text
-from latex2sympy.latex2sympy2 import latex2sympy
+from .latex_parser import latex2sympy_wrapper
 
 from .constants import *
 
@@ -81,8 +80,9 @@ def _is_frac(expr: str) -> bool:
     return ('matrix' not in expr) and (bool(re.search(r"^-?[0-9]+.?/0*[1-9][0-9]*.?$", expr)) or bool(re.search(r"[frac]", expr)))
 
 
-# def _is_frac(expr: str) -> bool:
-#     return bool(re.search(r"^-?[0-9]+.?/0*[1-9][0-9]*.?$", expr))
+def _strip_properly_formatted_commas(expr: str):
+    expr = re.sub(r"\d{1,3}(?:, ?\d{3})+", lambda x: x.group(0).replace(',', ''), expr)
+    return expr
 
 
 def _str_is_int(x: str) -> bool:
@@ -103,14 +103,14 @@ def _str_is_mat(x: str) -> bool:
 
 def _str_to_int(x: str):
     try:
-        x = latex2sympy(x)
+        x = latex2sympy_wrapper(x)
     except:
         pass
     return x
 
 
 def _str_to_mat(x: str):
-    return latex2sympy(x)
+    return latex2sympy_wrapper(x)
 
 
 def _str_matrix_normalize(expr: str):
@@ -127,13 +127,13 @@ def _str_to_interval(x: str):
     try:
         x = x.split('⋃') if '⋃' in x else x.split('\\cup')
         _interval = sympy.EmptySet
-        for or_interval in x:
+        for idx, or_interval in enumerate(x):
             _or_interval = sympy.EmptySet
             for and_interval in or_interval.split('∩') if '∩' in or_interval else or_interval.split('\\cap'):
                 and_interval = and_interval.strip()
                 int_start, int_end = and_interval.split(',')
-                int_start = latex2sympy(int_start.replace('(', '').replace('[', ''))
-                int_end = latex2sympy(int_end.replace(')', '').replace(']', ''))
+                int_start = latex2sympy_wrapper(int_start.replace('(', '').replace('[', ''))
+                int_end = latex2sympy_wrapper(int_end.replace(')', '').replace(']', ''))
                 # check validation
                 if int_start.is_number:
                     int_start = int_start.evalf()
@@ -184,11 +184,6 @@ def _str_to_decimal(digits: str, base: str):
     return tot
 
 
-def _strip_properly_formatted_commas(expr: str):
-    expr = re.sub(r"\d{1,3}(?:, ?\d{3})+", lambda x: x.group(0).replace(',', ''), expr)
-    return expr
-
-
 def _str_to_time_list(expr: str):
     # case 1: am/pm is must, when only hour, 2 am, 2\\text{am}
     regex = r"^(\d{1,2})\s*((?:\\text\{\s*[ap]\.?m\.?\s*\})|(?:[ap]\.?m\.?))$"
@@ -237,15 +232,23 @@ def _str_to_time_list(expr: str):
     return expr
 
 
-def string_normalize(expr: str):
+def string_normalize(
+    expr: str,
+    remove_mid_std_space: bool = True,
+    lower_case: bool = True,
+):
     try:
-        return _string_normalize(expr)
+        return _string_normalize(expr, remove_mid_std_space, lower_case)
     except Exception as e:
         print(("{}: {}".format(type(e).__name__, str(e))))
         return expr
 
 
-def _string_normalize(expr: str):
+def _string_normalize(
+    expr: str,
+    remove_mid_std_space: bool,
+    lower_case: bool,
+):
     if expr is None:
         return None
     
@@ -255,17 +258,17 @@ def _string_normalize(expr: str):
     # latex matrix has \\\\ which cannot be replaced, e.g., \\begin{matrix} 1 & 2 \\\\ 3 & 4 \\end{matrix}
     expr = _str_matrix_normalize(expr)
 
-    # Remove enclosing `\\text{}` or `\\mbox{}`.
+    # Remove enclosing `\\text{}` or `\\mbox`
     m = re.search(r"^\\\s*(text|mbox){\s*(?P<text>.+?)}$", expr, re.DOTALL)
     if m:
         expr = m.group("text")
-        return string_normalize(expr)
+        return string_normalize(expr, remove_mid_std_space, lower_case)
 
     # Extract yyy from {xxx | yyy }
     m = re.search(r"^\\{(.*)\|(.*)\\}$", expr, re.DOTALL)
     if m:
         expr = m.group(2) if m.group(2) else m.group(3)
-        return string_normalize(expr)
+        return string_normalize(expr, remove_mid_std_space, lower_case)
 
     # Remove all kinds of space
     expr = re.sub(r"\\:", "", expr)
@@ -374,14 +377,18 @@ def _string_normalize(expr: str):
         pattern = re.compile(regex)
         expr2 = pattern.sub(r"\1\2/180*\\pi", expr)
         return {
-            further_string_normalize(expr1),
-            further_string_normalize(expr2),
+            further_string_normalize(expr1, remove_mid_std_space, lower_case),
+            further_string_normalize(expr2, remove_mid_std_space, lower_case),
         }
 
-    return further_string_normalize(expr)
+    return further_string_normalize(expr, remove_mid_std_space, lower_case)
 
 
-def further_string_normalize(expr: str):
+def further_string_normalize(
+    expr: str, 
+    remove_mid_std_space: bool,
+    lower_case: bool,
+):
     """Normalize str expressions"""
     if len(expr) > 0 and expr[0] == "{" and expr[-1] == "}":
         expr = expr[1:-1]
@@ -403,7 +410,8 @@ def further_string_normalize(expr: str):
 
     expr = _inject_implicit_mixed_number(expr)
 
-    expr = expr.replace(" ", "")
+    if remove_mid_std_space:
+        expr = expr.replace(" ", "")
 
     # don't be case sensitive for text answers
     # TODO: 
@@ -411,7 +419,8 @@ def further_string_normalize(expr: str):
     #       "x + \sqrt{2}I" => "x + \sqrt{2}i", i will become an unknown variable.
     #   2. if expression has ONLY one unknown variable "i", it is fine.
     #       In `expr_with_only_i` of latex_parser.py: "1+2i" => 1+2I, "i(2-i)" => I(2-I), so the two are equal.
-    expr = expr.lower()
+    if lower_case:
+        expr = expr.lower()
 
     if _str_is_int(expr):
         expr = str(_str_to_int(expr))

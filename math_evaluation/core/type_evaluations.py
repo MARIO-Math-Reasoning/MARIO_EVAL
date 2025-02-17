@@ -4,8 +4,6 @@ from typing import Optional
 from sympy import simplify, im, N, Equality, Expr
 from sympy import re as sympy_re
 
-from latex2sympy.latex2sympy2 import latex2sympy
-
 from .evaluations import is_latex_equiv, is_equiv, is_equiv_possible_matrix, is_equiv_possible_tuple
 from .latex_normalize import (
     string_normalize,
@@ -18,7 +16,7 @@ from .latex_normalize import (
     _str_to_mat,
     _str_to_interval,
 )
-from .latex_parser import are_equal_under_sympy, _are_equal_latex_sympy
+from .latex_parser import latex2sympy_wrapper, are_equal_under_sympy, _are_equal_latex_sympy
 from .constants import *
 
 
@@ -30,8 +28,8 @@ def is_equiv_complex(
     ground_truth = _str_to_complex(ground_truth)
     prediction = _str_to_complex(prediction)
 
-    grt_normalized = string_normalize(ground_truth).replace("\\sqrt{-1}", "I")
-    pre_normalized = string_normalize(prediction).replace("\\sqrt{-1}", "I")
+    grt_normalized = string_normalize(ground_truth, lower_case=False).replace("\\sqrt{-1}", "I")
+    pre_normalized = string_normalize(prediction, lower_case=False).replace("\\sqrt{-1}", "I")
 
     try:
         if isinstance(grt_normalized, set) or isinstance(pre_normalized, set):
@@ -59,7 +57,7 @@ def try_to_parse_function(expr: str):
         lhs_str = expr[:idx]
         rhs_str = expr[idx + 1:]
         try:
-            f_lhs = latex2sympy(lhs_str)
+            f_lhs = latex2sympy_wrapper(lhs_str)
             inv_f_lhs = 1 / f_lhs
             # if (f_lhs.is_Function and getattr(f_lhs, "name", None)) \
             #     or (inv_f_lhs.is_Function and getattr(inv_f_lhs, "name", None)) \

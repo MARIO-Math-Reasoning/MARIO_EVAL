@@ -19,9 +19,12 @@ This is the official repository for the paper [MARIO Eval](https://arxiv.org/abs
 - [x] integration of LLM
 
 ## Requirements
-1. `sympy=1.12`
+1. `sympy=1.13.1`
 2. `antlr4-python3-runtime==4.11.1`
-3. **NOT** install gmpy2, i.e., `pip uninstall gmpy2`
+    - If `omegaconf` needed, please `pip install omegaconf==2.4.0.dev3`
+    - If `hydra-core` needed, please install from source for the latest version `git clone https://github.com/facebookresearch/hydra.git` 
+3. **NOT** install `gmpy2`, i.e., `pip uninstall gmpy2`
+
 
 ## Use without install
 ```
@@ -49,6 +52,8 @@ True
 
 ## Unittest
 `python -m unittest math_evaluation/tests/test_is_equiv.py`
+
+Please wait for about 20 seconds, because timeout test needs 15 (default) seconds.
 
 ## Citation
 Please cite our paper if you use data or code.

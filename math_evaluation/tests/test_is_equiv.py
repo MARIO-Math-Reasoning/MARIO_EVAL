@@ -30,14 +30,12 @@ class TestIsEquiv(unittest.TestCase):
         # set
         test_in = "{x, x - 1}"
         test_out = "{x - 1, x}"
-        # not True for is_equiv, because of string_normalize
-        self.assertTrue(are_equal_under_sympy(test_in, test_out, verbose=verbose))
+        self.assertTrue(is_equiv(test_in, test_out, verbose=verbose))
 
         # complex
         test_in = "x + \\sqrt2I"
         test_out = "x + 1.414I"
-        # not True of is_equiv, because of lowercase in string_normalize
-        self.assertTrue(are_equal_under_sympy(test_in, test_out, verbose=verbose))
+        self.assertTrue(is_equiv(test_in, test_out, verbose=verbose))
 
     def test_is_equiv_real_or_list(self):
         verbose = False
@@ -205,6 +203,10 @@ class TestIsEquiv(unittest.TestCase):
 
         test_in = "(2x+3)(2x -1)(2x+1)"
         test_out = "(2x - 1)(2x + 1)(2x + 3)"
+        self.assertTrue(_test_is_equiv(test_in, test_out, verbose=verbose))
+
+        test_in = "2^6 * 3^5 * 5^4"
+        test_out = "2^6 3^5 5^4"
         self.assertTrue(_test_is_equiv(test_in, test_out, verbose=verbose))
 
     def test_is_equiv_matrix(self):
