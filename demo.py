@@ -12,6 +12,7 @@ def is_equiv_MATH(
     ground_truth: Union[str, List[str]],
     prediction: str,
     verbose: bool = False,
+    fast: bool = False,
 ) -> bool:
     """
     We manually annotated the ground-truth of MATH testset.
@@ -20,12 +21,12 @@ def is_equiv_MATH(
     """
     if isinstance(ground_truth, list):
         for grt in ground_truth:
-            if is_equiv(grt, prediction, verbose):
+            if is_equiv(grt, prediction, verbose, fast):
                 return True
         return False
     else:
         assert isinstance(ground_truth, str)
-        return is_equiv(ground_truth, prediction, verbose)
+        return is_equiv(ground_truth, prediction, verbose, fast)
 
 
 if __name__ == "__main__":
@@ -46,21 +47,21 @@ if __name__ == "__main__":
   
     ground_truth = ["\\left(\tfrac32, -\\tfrac52\\right)", "\\left(-\\tfrac52, -\\tfrac52\\right)"]
     prediction = "(-2.5,-2.5)"
-    eval_res = is_equiv_MATH(ground_truth, prediction, verbose=False)
+    eval_res = is_equiv_MATH(ground_truth, prediction, verbose=False, fast=True)
     assert eval_res
 
     # Another interesting example     
     ground_truth = "1"
     prediction = "-(-1)^\\frac{{57}}{{85}}\\left({1}+{e}^{{\\frac{{14}}{{85}}}{i}\\pi}\\right)\\left({1}+{e}^{{\\frac{{28}}{{85}}}{i}\\pi}\\right)\\left({1}+{e}^{{\\frac{{46}}{{85}}}{i}\\pi}\\right)\\left({1}+{e}^{{\\frac{{54}}{{85}}}{i}\\pi}\\right)\\left({1}+{e}^{{\\frac{{56}}{{85}}}{i}\\pi}\\right)\\left({1}+{e}^{{\\frac{{58}}{{85}}}{i}\\pi}\\right)\\left({1}+{e}^{{\\frac{{62}}{{85}}}{i}\\pi}\\right)\\left({1}+{e}^{{\\frac{{78}}{{85}}}{i}\\pi}\\right)"
-    eval_res = is_equiv_MATH(ground_truth, prediction, verbose=False)
+    eval_res = is_equiv_MATH(ground_truth, prediction, verbose=False, fast=True)
     assert eval_res
 
     # Let's verify it
-    from latex2sympy.latex2sympy2 import latex2sympy
+    from math_evaluation.core.latex_parser import latex2sympy_wrapper
     import sympy as sp
 
     prediction = prediction.replace("{i}", "{I}")
-    pred_val = latex2sympy(prediction)
+    pred_val = latex2sympy_wrapper(prediction)
     print("ground_truth: ", ground_truth)
     print("prediction: ", pred_val)
     print("Re of prediction: ", sp.re(pred_val).evalf())
